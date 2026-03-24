@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react"
 import { z } from "zod"
-import { executeProcedure , DoTransaction } from "./services/apiServices"
+import { executeProcedure , DoTransaction } from "./services/apiServices.js"
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -150,8 +150,9 @@ function App() {
           "xR3P2FQ9gQI7pvkeyawk7A==",
           "1#1000"
         )
-        const data = response.decrypted.CitiesData
-          ? JSON.parse(response.decrypted.CitiesData)
+        const decrypted = response.decrypted as { CitiesData?: string } | undefined
+        const data = decrypted?.CitiesData
+          ? JSON.parse(decrypted.CitiesData)
           : []
 
         if (Array.isArray(data)) {
@@ -246,9 +247,9 @@ function App() {
       transactionPayload
     )
     console.log(response)
-    if(response.success == 200){
+    if (Number(response.success) === 200) {
       toast.success("تم إرسال الاستبيان بنجاح")
-    }else{
+    } else {
       toast.error(response.error)
     }
 
