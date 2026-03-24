@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+:root {
+  --wasl-green-1: #24645e;
+  --wasl-green-2: #18383d;
+  --wasl-green-3: #17343b;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100%;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.islamic-pattern-bg {
+  background-image:
+    url("/background%20pattern.png");
+  background-size: 1000px 500px, cover;
+  background-position: 0 0, center;
+  background-repeat: repeat, no-repeat;
+}
+
+.form-pattern-bg {
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(36, 100, 94, 0.25);
+  backdrop-filter: blur(1px);
+}
+
+.themed-title {
+  color: var(--wasl-green-3);
+}
+
+.themed-input {
+  border: 1px solid #d1d5db;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.themed-input:focus {
+  border-color: var(--wasl-green-1);
+  box-shadow: 0 0 0 3px rgba(36, 100, 94, 0.18);
+  outline: none;
+}
+
+.themed-btn {
+  background: linear-gradient(
+    90deg,
+    var(--wasl-green-1) 0%,
+    var(--wasl-green-2) 58%,
+    var(--wasl-green-3) 100%
+  );
+  color: #fff;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.themed-btn:hover {
+  opacity: 0.92;
+}
+
+.themed-btn:active {
+  transform: translateY(1px);
+}
