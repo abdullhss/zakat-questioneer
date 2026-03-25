@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react"
+import { useEffect, useState, type FormEvent, useRef } from "react"
 import { z } from "zod"
 import { executeProcedure , DoTransaction } from "./services/apiServices.js"
 import { ToastContainer, toast } from 'react-toastify';
@@ -127,7 +127,7 @@ function App() {
     email?: string
   }>({})
   const [cities, setCities] = useState<City[]>([])
-  const [formValues, setFormValues] = useState({
+  const initialFormValues = {
     fullName: "",
     role: "",
     city: "",
@@ -140,8 +140,26 @@ function App() {
     suggestions: "",
     reachToWeb: "",
     workshopAttendance: undefined as "agree" | "form-only" | undefined,
-  })
+  }
+
+  const [formValues, setFormValues] = useState(initialFormValues)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const isFormValid = surveySchema.safeParse(formValues).success
+
+  const isAgreeSelected = formValues.workshopAttendance === "agree"
+  const isSection1CompleteForAgree =
+    formValues.fullName.trim() &&
+    formValues.role.trim() &&
+    formValues.city.trim() &&
+    formValues.phone.trim() &&
+    formValues.email.trim()
+
+  const section1MissingMessage =
+    isAgreeSelected && !isSection1CompleteForAgree
+      ? "يرجى إكمال القسم الأول البيانات العامة قبل إرسال الاستبيان."
+      : null
+
+  const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     const getCities = async () => {
@@ -241,20 +259,25 @@ function App() {
           : ""
 
     const transactionPayload = `0#${payload.fullName}#${payload.role}#${payload.city}#${payload.phone}#${payload.email}#${usageValue}#${speedValue}#${clearityValue}#${payload.problems}#${payload.suggestions}#${payload.reachToWeb}#${attendanceValue}`
+    setIsSubmitting(true)
+    try {
+      const response = await DoTransaction(
+        "6uvowgE2pDVXNQ6rsnH0Sw==",
+        transactionPayload
+      )
+      console.log(response)
 
-    const response = await DoTransaction(
-      "6uvowgE2pDVXNQ6rsnH0Sw==",
-      transactionPayload
-    )
-    console.log(response)
-    if (Number(response.success) === 200) {
-      toast.success("تم إرسال الاستبيان بنجاح")
-    } else {
-      toast.error(response.error)
+      if (Number(response.success) === 200) {
+        toast.success("تم إرسال الاستبيان بنجاح")
+        setFormValues(initialFormValues)
+        formRef.current?.reset()
+        setErrors({})
+      } else {
+        toast.error(response.error)
+      }
+    }finally {
+      setIsSubmitting(false)
     }
-
-    setErrors({})
-    event.currentTarget.reset()
   }
 
   return (
@@ -273,7 +296,7 @@ function App() {
           <h1 className="themed-title text-center text-2xl font-bold sm:text-3xl">
             استطلاع الرأي والتقييم الفني لمنصة "وصل الليبية" الإلكترونية
           </h1>
-          <p className="mt-2 text-center text-sm text-slate-600">
+          <p className="themed-title text-center text-2xl font-bold sm:text-3xl">
             التابعة لصندوق الزكاة الليبي
           </p>
           <p className="mt-4 text-sm leading-7 text-slate-700">
@@ -283,6 +306,7 @@ function App() {
           </p>
 
           <form
+            ref={formRef}
             className="mt-8 space-y-8"
             noValidate
             onSubmit={handleSubmit}
@@ -290,7 +314,7 @@ function App() {
           >
             <section className="space-y-4">
               <h2 className="themed-title text-xl font-semibold">
-                القسم الأول: البيانات العامة (اختياري)
+                القسم الأول: البيانات العامة 
               </h2>
               <p className="text-sm text-slate-600">
                 يرجى تعبئة البيانات التالية في حال رغبتكم في التواصل معكم
@@ -591,7 +615,7 @@ function App() {
               </h2>
               <p className="mt-2 text-sm leading-7 text-slate-700">
                 "نشكركم على سعة صدركم ومساهمتكم الفاعلة. نؤكد لكم بأن كافة
-                ملاحظاتكم ستكون محل  اهتمام مجلس الإدارة بالصندوق بالصندوق، وستشكل
+                ملاحظاتكم ستكون محل  اهتمام مجلس إدارة صندوق الزكاة ، وستشكل
                 ركيزة أساسية في جدول أعمال اجتماعنا القادم لتطوير منصة وصل
                 الليبية."
               </p>
@@ -599,18 +623,30 @@ function App() {
 
             <button
               type="submit"
-              disabled={!isFormValid}
+              disabled={!isFormValid || isSubmitting}
               className={`themed-btn w-full rounded-xl px-4 py-3 text-sm font-medium transition-opacity sm:text-base ${
-                !isFormValid ? "cursor-not-allowed opacity-60" : ""
+                !isFormValid || isSubmitting ? "cursor-not-allowed opacity-60" : ""
               }`}
             >
-              إرسال الاستبيان
+              <span className="inline-flex items-center justify-center gap-2">
+                {isSubmitting ? (
+                  <>
+                    <span
+                      className="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-white"
+                      aria-hidden="true"
+                    />
+                    جاري الإرسال...
+                  </>
+                ) : (
+                  "إرسال الاستبيان"
+                )}
+              </span>
             </button>
-            {/* {submitMessage && (
-              <p className="text-center text-sm font-medium text-emerald-700">
-                {submitMessage}
+            {section1MissingMessage && (
+              <p className="mt-2 text-center text-sm text-red-600">
+                {section1MissingMessage}
               </p>
-            )} */}
+            )}
           </form>
         </div>
       </section>
